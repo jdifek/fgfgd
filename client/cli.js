@@ -1,15 +1,31 @@
+const fs = require("fs");
 const inquirer = require("inquirer").default;
 const axios = require("axios");
 const API_URL = "http://localhost:5000/api";
 
+const SESSION_FILE = "session.txt";
 let sessionID = null;
 
-async function startSession() {
-  const res = await axios.post(`${API_URL}/session`);
-  sessionID = res.data.sessionID; // Сохраняем sessionID
-  console.log("Session started:", sessionID); // Выведем sessionID в консоль для отладки
+function loadSession() {
+  if (fs.existsSync(SESSION_FILE)) {
+    sessionID = fs.readFileSync(SESSION_FILE, "utf8").trim();
+    console.log("🔄 Используем сохраненный sessionID:", sessionID);
+  }
 }
 
+function saveSession(id) {
+  fs.writeFileSync(SESSION_FILE, id, "utf8");
+}
+
+async function startSession() {
+  loadSession();
+  if (!sessionID) {
+    const res = await axios.post(`${API_URL}/session`);
+    sessionID = res.data.sessionID;
+    saveSession(sessionID);
+    console.log("🆕 Создана новая сессия:", sessionID);
+  }
+}
 
 async function createWallet() {
   await axios.post(`${API_URL}/wallet`, { sessionID });
