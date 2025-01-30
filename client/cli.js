@@ -28,10 +28,11 @@ async function lookWallet() {
 
 async function transferMoney() {
   try {
-    const { data: wallets } = await axios.get(`${API_URL}/wallet/${sessionID}`);
+    // Получаем кошельки текущего пользователя
+    const { data: userWallets } = await axios.get(`${API_URL}/wallet/${sessionID}`);
 
-    if (wallets.length < 2) {
-      console.log(" Нужно минимум два кошелька для перевода!");
+    if (userWallets.length < 1) {
+      console.log("У вас нет кошельков для отправки!");
       return;
     }
 
@@ -40,20 +41,23 @@ async function transferMoney() {
       {
         type: "list",
         name: "fromWallet",
-        choices: wallets.map(w => ({ name: `${w.address} (Баланс: ${w.balance})`, value: w.address })),
+        choices: userWallets.map(w => ({ name: `${w.address} (Баланс: ${w.balance})`, value: w.address })),
         message: "Выберите кошелек для отправки денег"
       }
     ]);
 
-    // Фильтруем кошельки, чтобы исключить выбранный для отправки
-    const availableWallets = wallets.filter(w => w.address !== fromWallet);
+    // Получаем **все** кошельки из базы
+    const { data: allWallets } = await axios.get(`${API_URL}/wallet`);
+
+    // Фильтруем только тот же кошелек (но оставляем другие кошельки пользователя)
+    const availableWallets = allWallets.filter(w => w.address !== fromWallet);
 
     if (availableWallets.length === 0) {
       console.log(" Нет доступных кошельков для перевода!");
       return;
     }
 
-    // Выбор кошелька, на который отправляем
+    // Выбор кошелька-получателя
     const { toWallet } = await inquirer.prompt([
       {
         type: "list",
@@ -63,12 +67,12 @@ async function transferMoney() {
       }
     ]);
 
-    // Ввод суммы перевода
+    // Ввод суммы
     const { amount } = await inquirer.prompt([
       { name: "amount", message: "Введите сумму перевода" }
     ]);
 
-    // Запрос на перевод
+    // Отправка запроса на перевод
     await axios.post(`${API_URL}/transfer`, { fromWallet, toWallet, amount: Number(amount) });
 
     console.log(` Успешный перевод ${amount} от ${fromWallet} к ${toWallet}!`);
@@ -76,6 +80,7 @@ async function transferMoney() {
     console.error(" Ошибка при переводе:", error.response?.data || error.message);
   }
 }
+
 
 
 async function menu() {

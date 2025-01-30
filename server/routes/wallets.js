@@ -29,4 +29,11 @@ router.get('/wallet/:sessionID', async (req, res) => {  // Исправлено
   res.json(user.wallets);
 });
 
+router.get('/wallet', async (req, res) => {  // Исправлено
+  const wallets = await Wallet.find()
+  if (!wallets) return res.status(404).json({ error: "wallets not found" });
+  res.json(wallets)
+});
+
+
 module.exports = router;
