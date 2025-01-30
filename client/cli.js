@@ -9,7 +9,7 @@ let sessionID = null;
 function loadSession() {
   if (fs.existsSync(SESSION_FILE)) {
     sessionID = fs.readFileSync(SESSION_FILE, "utf8").trim();
-    console.log("🔄 Используем сохраненный sessionID:", sessionID);
+    console.log(" Используем сохраненный sessionID:", sessionID);
   }
 }
 
@@ -23,7 +23,7 @@ async function startSession() {
     const res = await axios.post(`${API_URL}/session`);
     sessionID = res.data.sessionID;
     saveSession(sessionID);
-    console.log("🆕 Создана новая сессия:", sessionID);
+    console.log(" Создана новая сессия:", sessionID);
   }
 }
 
